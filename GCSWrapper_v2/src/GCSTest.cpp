@@ -1,17 +1,7 @@
 // GCSTest.cpp : Defines the entry point for the console application.
 //
 
-#include <iostream>
-#include "stdio.h"
-#include "Geo.h"
-#include "GCS.h"
-#include "Constraints.h"
-//#include "Test1.h"
-//#include "Test2.h"
-//#include "Test3.h"
-//#include "Test4.h"
-//#include "Test5.h"
-#include "GCSWrapper.h"
+#include "GCSTest.h"
 
 void test_line_circle_coincident()	{
 
@@ -554,7 +544,7 @@ void test_test_angle()	{
 }*/
 
 
-int main(int argc, const char* argv[])
+int run_test()
 {
 	//test_line_circle_coincident();
 	//test_circle_min_diameter();
