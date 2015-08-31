@@ -65,6 +65,7 @@ public:
 
 	// create shapes
 	int add_point(double x1, double y1);
+	int add_join_segment(double x1, double y1, double x2, double y2);
 	int add_segment(double x1, double y1, double x2, double y2);
 	//int add_vertical_segment(double x1, double y1, double y2);
 	int add_circle(double x1, double y1, double radius);
@@ -73,12 +74,14 @@ public:
 	void perpendicular(int id1, int id2);
 	void parallel(int id1, int id2);
 	//void tangent(int id1, int id2);
+	
 
 	void collinear_point_line(int id1, int id2);	// id1 = of a point, id2 = of a line
 	void coincident_point_circle(int id1, int id2);
 	void coincident_line_circle(int id1, int id2);
 
-	void angle(int id1, int id2, int id3, double angle);
+
+	//void angle(int id1, int id2, int id3, double angle);
 
 	void line_vertical(int id1);
 	//void point_vertical(int id1, int id2);
@@ -89,10 +92,20 @@ public:
 	void fix_point(int id);
 	void fix_line(int id);
 
+	void test_angle(int id1, int id2);
+	void angle_1(int id1, int id2, double angle);	
+	void angle_line_circle(int id1, int id2, double angle);
+
+	void left_of(int id1, int id2);
 	void circle_min_diameter(int id, double diameter);
 	void point_segment_coincidence(int id1, int id2);
 	//void Coincident(int id1, int id2);
-		
+
+	void calculate_line_length(SaLine* l, double& lgh);
+	void calculate_line_midpoint(SaLine* l, double& x, double& y);
+	void calculate_rotate_line(SaLine* l, double& x1,  double& y1, double& x2,  double& y2);
+	bool calculate_is_left_of(SaPoint* p, SaLine* l);
+
 	bool solve();
 
 	//std::string get_shape_type(GCS::Shape_Type type);
