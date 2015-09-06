@@ -687,7 +687,6 @@ void GCSWrapper::brace(int id1, int id2)	// id1 = line, id2 = circle
 	double c_midy = *c->get_gcs_circle().center.y;
 
 	int p = add_point(c_midx, c_midy);
-	
 	collinear_point_line(p, id1);
 }
 
@@ -733,6 +732,43 @@ void GCSWrapper::externally_connected(int id1, int id2)	// id1 = circle1, id2 = 
 
 void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
 {
+	SaCircle* c1 = (SaCircle*)get_shape(id1);
+	SaCircle* c2 = (SaCircle*)get_shape(id2);
+
+	double r1 = *(c1->get_gcs_circle().rad);
+	double r2 = *(c2->get_gcs_circle().rad);
+	
+	double circum1 = r1 * 2;
+	double circum2 = r2 * 2;
+
+	// for C2
+	double l1_ax = *(c2->get_gcs_circle().center.x) - r2;
+	double l1_ay = *(c2->get_gcs_circle().center.y);
+	double l1_bx = l1_ax + circum2;
+
+	int l1 = add_segment(l1_ax, l1_ay, l1_bx, l1_ay);
+	fix_length(l1, circum2);
+
+	brace(l1, id2);	// id2 = id for circle2
+	
+	// for C1
+	double l2_cx = *(c1->get_gcs_circle().center.x) - r1;
+	double l2_cy = *(c1->get_gcs_circle().center.y);
+	double l2_dx = l2_cx + circum1;
+	
+	int l2 = add_segment(l2_cx, l2_cy, l2_dx, l2_cy);
+	fix_length(l2, circum1);
+
+	brace(l2, id1);	// id1 = id for circle1
+
+	int p_c = add_point(l2_cx, l2_cy);
+	int p_d = add_point(l2_dx, l2_cy);
+	SaPoint* c = (SaPoint*)get_shape(p_c);
+	SaPoint* d = (SaPoint*)get_shape(p_d);
+
+	SaLine* l_ab = (SaLine*)get_shape(l1);
+	gcs_sys.addConstraintPointOnLine(c->get_gcs_point(), l_ab->get_gcs_line(), 1);
+	gcs_sys.addConstraintPointOnLine(d->get_gcs_point(), l_ab->get_gcs_line(), 1);
 }
 
 void GCSWrapper::angle_line_circle(int id1, int id2, double angle)	// id1 = line, id2 = circle
@@ -905,12 +941,9 @@ void GCSWrapper::tangent(int id1, int id2)	{
 void GCSWrapper::fix_length(int id, double length)	{
 
 	SaLine* l1 = (SaLine*)get_shape(id);
-	//SaLine* l2 = (SaLine*)get_shape(id2);	
-
 	double* d = new double(length);
 	_FixedParameters.push_back(d);
-	//FixParameters.push_back(new double(20));
-	
+
 	// adding constraing
 	gcs_sys.addConstraintP2PDistance(l1->get_gcs_line().p1, l1->get_gcs_line().p2, d, 1);	
 
@@ -1000,7 +1033,6 @@ void GCSWrapper::calculate_line_length(SaLine* l, double& lgh)
 	double y2 = *(l->get_gcs_line().p2.y);
 
 	lgh = sqrt( (pow(x2 - x1, 2)) + (pow(y2 - y1, 2)) );
-	//std::cout<<lgh<<"\n";
 }
 
 void GCSWrapper::calculate_line_midpoint(SaLine* l, double& x, double& y)

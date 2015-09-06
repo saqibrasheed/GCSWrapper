@@ -551,8 +551,10 @@ void test_brace()
 {
 	GCSWrapper* wrapper = new GCSWrapper();
 
-	int l1 = wrapper->add_segment(0.0, 0.0, 10.0, 0.0);
-	int c1 = wrapper->add_circle(1.0, 0.0, 5.0);
+	//int l1 = wrapper->add_segment(0.0, 0.0, 10.0, 0.0);
+	//int c1 = wrapper->add_circle(1.0, 0.0, 5.0);
+	int l1 = wrapper->add_segment(15.0, 0.0, 25.0, 0.0);
+	int c1 = wrapper->add_circle(15.0, 0.0, 5);
 
 	wrapper->brace(l1, c1);
 	std::cout<<"\n"<<"before solving"<<"\n";
@@ -586,6 +588,27 @@ void test_externally_connected()
 	wrapper->show_values(0);
 }
 
+/////////////////
+// Proper Part //
+/////////////////
+void test_proper_part()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(1.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(0.0, 0.0, 3.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->proper_part(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
 
 int run_test()
 {
@@ -618,7 +641,9 @@ int run_test()
 	//test_angle_point_line_inconsistent_nonboundary();
 	//test_angle_line_circle();
 
-	test_externally_connected();
+	//test_brace();
+	//test_externally_connected();
+	test_proper_part();
 
 	//GCS::Test1 *test1 = new GCS::Test1();
 	//GCS::Test2 *test2 = new GCS::Test2();
