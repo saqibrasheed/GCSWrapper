@@ -77,10 +77,9 @@ public:
 	//void tangent(int id1, int id2);
 	
 
-	void collinear_point_line(int id1, int id2);	// id1 = of a point, id2 = of a line
-	void coincident_point_circle(int id1, int id2);
-	void coincident_line_circle(int id1, int id2);
-
+	void collinear_point_line(int id1, int id2);	// id1 = point, id2 = line
+	void coincident_point_circle(int id1, int id2);	// id1 = point, id2 = circle
+	void coincident_line_circle(int id1, int id2);	// id1 = line, id2 = circle
 
 	//void angle(int id1, int id2, int id3, double angle);
 
@@ -95,12 +94,17 @@ public:
 
 	void test_angle(int id1, int id2);
 	void angle_1(int id1, int id2, double angle);	
-	void angle_line_circle(int id1, int id2, double angle);
+	
 
 	void left_of(int id1, int id2);
 	void circle_min_diameter(int id, double diameter);
 	void point_segment_coincidence(int id1, int id2);
+	void angle_line_circle(int id1, int id2, double angle);
 	//void Coincident(int id1, int id2);
+
+	void brace(int id1, int id2);	// id1 = line, id2 = circle
+	void externally_connected(int id1, int id2);	// id1 = circle1, id2 = circle2
+	void proper_part(int id1, int id2);	// id1 = circle1, id2 = circle2
 
 	void calculate_line_length(SaLine* l, double& lgh);
 	void calculate_line_midpoint(SaLine* l, double& x, double& y);

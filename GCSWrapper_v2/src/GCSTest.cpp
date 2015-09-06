@@ -544,6 +544,49 @@ void test_test_angle()	{
 }*/
 
 
+///////////
+// BRACE //
+///////////
+void test_brace()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+
+	int l1 = wrapper->add_segment(0.0, 0.0, 10.0, 0.0);
+	int c1 = wrapper->add_circle(1.0, 0.0, 5.0);
+
+	wrapper->brace(l1, c1);
+	std::cout<<"\n"<<"before solving"<<"\n";
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<"\n"<<"after solving"<<"\n";
+	wrapper->show_values(0);
+}
+
+//////////////////////////
+// Externally Connected //
+//////////////////////////
+void test_externally_connected()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 3.0);
+	int c2 = wrapper->add_circle(15.0, 0.0, 2.0);
+
+	wrapper->fix_circle_radius(c1, 3.0);
+	wrapper->fix_circle_radius(c2, 2.0);
+
+	wrapper->externally_connected(c1, c2);
+	std::cout<<"\n"<<"before solving"<<"\n";
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<"\n"<<"after solving"<<"\n";
+	wrapper->show_values(0);
+}
+
+
 int run_test()
 {
 	//test_line_circle_coincident();
@@ -553,7 +596,7 @@ int run_test()
 	//test_circle_min_radius_consistent();
 
 	//test_point_segment_coincidence();
-	test_point_segment_coincidence_consistent_boundary();		// returns True
+	//test_point_segment_coincidence_consistent_boundary();		// returns True
 	//test_point_segment_coincidence_inconsistent_boundary();	// returns True
 	//test_point_segment_coincidence_consistent_non_boundary();	// returns False
 	//test_point_segment_coincidence_inconsistent_non_boundary();	// returns False
@@ -574,6 +617,8 @@ int run_test()
 	//test_angle_point_line_consistent_nonboundary();
 	//test_angle_point_line_inconsistent_nonboundary();
 	//test_angle_line_circle();
+
+	test_externally_connected();
 
 	//GCS::Test1 *test1 = new GCS::Test1();
 	//GCS::Test2 *test2 = new GCS::Test2();

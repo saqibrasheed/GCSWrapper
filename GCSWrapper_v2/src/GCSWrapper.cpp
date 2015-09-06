@@ -676,6 +676,65 @@ void GCSWrapper::left_of(int id1, int id2)
 	*/
 }
 
+void GCSWrapper::brace(int id1, int id2)	// id1 = line, id2 = circle
+{
+	SaLine* l = (SaLine*)get_shape(id1);
+	SaCircle* c = (SaCircle*)get_shape(id2);
+
+	coincident_line_circle(id1, id2);
+	
+	double c_midx = *c->get_gcs_circle().center.x;
+	double c_midy = *c->get_gcs_circle().center.y;
+
+	int p = add_point(c_midx, c_midy);
+	
+	collinear_point_line(p, id1);
+}
+
+void GCSWrapper::externally_connected(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);
+	SaCircle* c2 = (SaCircle*)get_shape(id2);
+
+	double c1_rad = *(c1->get_gcs_circle().rad);
+	double c1_x = *(c1->get_gcs_circle().center.x);
+	double c1_y = *(c1->get_gcs_circle().center.y);
+
+	double c2_x = *(c2->get_gcs_circle().center.x);
+	double c2_y = *(c2->get_gcs_circle().center.y);
+
+	int l = add_segment(c1_x, c1_y, c2_x, c2_y);
+	SaLine* l1 = (SaLine*)get_shape(l);
+	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p1, c1->get_gcs_circle().center, 1);
+	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p2, c2->get_gcs_circle().center, 1);
+	
+	double dem_x = *(l1->get_gcs_line().p2.x);
+	double dem_y = *(l1->get_gcs_line().p2.y);
+	double p_x, p_y;
+
+	// to avoid zero-division
+	if(dem_x == 0)
+		p_x = *(l1->get_gcs_line().p1.x) + rand() % 1;
+	else	
+		p_x = *(l1->get_gcs_line().p1.x) + rand() % (int)dem_x;
+	
+	if(dem_y == 0)
+		p_y = *(l1->get_gcs_line().p1.y) + rand() % 1;
+	else
+		p_y = *(l1->get_gcs_line().p1.y) + rand() % (int)dem_y;
+
+	int p1 = add_point(p_x, p_y);
+	coincident_point_circle(p1, id1);
+	coincident_point_circle(p1, id2);
+	
+	SaPoint* p = (SaPoint*)get_shape(p1);
+	gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l1->get_gcs_line(), 1);
+}
+
+void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
+{
+}
+
 void GCSWrapper::angle_line_circle(int id1, int id2, double angle)	// id1 = line, id2 = circle
 {
 	SaLine* l = (SaLine*)get_shape(id1);
@@ -925,8 +984,7 @@ void GCSWrapper::show_values(int id)	{
 
 	for(int i=0; i<_Parameters.size(); ++i)	{    
 
-		std::cout<<"Param "<<i+1<<": "<<*_Parameters[i]<<"\n";
-		
+		std::cout<<"Param "<<i+1<<": "<<*_Parameters[i]<<std::endl;
 	}
 }
 
@@ -986,8 +1044,7 @@ void GCSWrapper::calculate_rotate_line(SaLine* l, double& x1,  double& y1, doubl
 }
 
 bool GCSWrapper::calculate_is_left_of(SaPoint* p, SaLine* l)
-{
-	
+{	
 	double xa = *(l->get_gcs_line().p1.x);
 	double ya = *(l->get_gcs_line().p1.y);
 	double xb = *(l->get_gcs_line().p2.x);
