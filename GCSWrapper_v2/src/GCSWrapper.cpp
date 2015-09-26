@@ -85,6 +85,10 @@ void GCSWrapper::reset()	{
 
 	id = 0;
 	_Shapes.clear();
+
+	gcs_sys.clear();
+	_Parameters.clear();
+	_FixedParameters.clear();
 	//std::cout<<"reset";
 }
 
@@ -478,14 +482,6 @@ void GCSWrapper::coincident_line_circle(int id1, int id2)
 	gcs_sys.addConstraintPointOnCircle(l->get_gcs_line().p2, c->get_gcs_circle(), 1);
 }
 
-void GCSWrapper::collinear_point_line(int id1, int id2)	
-{
-	SaPoint* p = (SaPoint*)get_shape(id1);
-	SaLine* l = (SaLine*)get_shape(id2);
-
-	gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l->get_gcs_line(), 1);
-}
-
 void GCSWrapper::coincident_line_line(int id1, int id2)	
 {
 	SaLine* l1 = (SaLine*)get_shape(id1);
@@ -493,6 +489,23 @@ void GCSWrapper::coincident_line_line(int id1, int id2)
 
 	gcs_sys.addConstraintPointOnLine(l1->get_gcs_line().p1, l2->get_gcs_line(), 1);
 	gcs_sys.addConstraintPointOnLine(l1->get_gcs_line().p2, l2->get_gcs_line(), 1);
+}
+
+void GCSWrapper::collinear_point_line(int id1, int idlp1, int idlp2)
+{
+	SaPoint* p = (SaPoint*)get_shape(id1);
+	SaPoint* l1 = (SaPoint*)get_shape(idlp1);
+	SaPoint* l2 = (SaPoint*)get_shape(idlp2);
+    
+	gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l1->get_gcs_point(),l2->get_gcs_point(), 1);
+}
+
+void GCSWrapper::collinear_point_line(int id1, int id2)	
+{
+	SaPoint* p = (SaPoint*)get_shape(id1);
+	SaLine* l = (SaLine*)get_shape(id2);
+
+	gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l->get_gcs_line(), 1);
 }
 
 /*void GCSWrapper::point_segment_coincidence(int id1, int id2)	// id1 = point, id2 = line
@@ -529,7 +542,6 @@ void GCSWrapper::point_segment_coincidence(int id1, int id2)	// id1 = point, id2
 	//int c = add_circle(10.0, 10.0, 3.0);
 	int c = add_circle(l1_midx, l1_midy, l1_lgh/2);
 	SaCircle* circle = (SaCircle*)get_shape(c);
-
 
 	coincident_line_circle(id2, c);	
 	//solve();
@@ -579,7 +591,7 @@ void GCSWrapper::test_angle(int id1, int id2)
 	int l1 = add_segment(_x1, _y1, _x2, _y2);
 }
 
-void GCSWrapper::angle_1(int id1, int id2, double angle)
+/*void GCSWrapper::angle_1(int id1, int id2, double angle)
 {
 	SaPoint* p = (SaPoint*)get_shape(id1);
 	SaLine* l = (SaLine*)get_shape(id2);
@@ -589,9 +601,10 @@ void GCSWrapper::angle_1(int id1, int id2, double angle)
 	
 	gcs_sys.addConstraintL2LAngle(l->get_gcs_line().p1, l->get_gcs_line().p2, 
 		l->get_gcs_line().p1, p->get_gcs_point(), ang, 1);
-}
+}*/
  
-void GCSWrapper::left_of(int id1, int id2)
+
+bool GCSWrapper::left_of(int id1, int id2)
 {
 	SaPoint* p = (SaPoint*)get_shape(id1);
 	SaLine* l = (SaLine*)get_shape(id2);
@@ -608,22 +621,22 @@ void GCSWrapper::left_of(int id1, int id2)
 	double c_x = *(p->get_gcs_point().x);
 	double c_y = *(p->get_gcs_point().y);
 	
-//	std::cout<<c_x<<"\n";
+	//std::cout<<c_x<<"\n";
 	int c = add_point(c_x, c_y);
 
 	//fix_line(id2);
 	collinear_point_line(c, id2);
 	show_values(0);
 
-	solve();
+	if(!solve()) return false;
 
-	std::cout<<"Values after first solve"<<"\n";
-	show_values(0);
+	//std::cout<<"Values after first solve"<<"\n";
+	//show_values(0);
 
 	double x = *(_Parameters[_Parameters.size()-2]);
 	double y = *(_Parameters[_Parameters.size()-1]);
 
-	std::cout<<"Joining new and old points"<<"\n";
+	//std::cout<<"Joining new and old points"<<"\n";
 	//int _l = add_join_segment(p_x, p_y, x, y);
 	int _l = add_segment(p_x, p_y, x, y);
 	SaLine* l2 = (SaLine*)get_shape(_l);
@@ -632,8 +645,8 @@ void GCSWrapper::left_of(int id1, int id2)
 	gcs_sys.addConstraintP2PCoincident(l2->get_gcs_line().p1, p->get_gcs_point(), 1);
 	gcs_sys.addConstraintP2PCoincident(l2->get_gcs_line().p2, c_p->get_gcs_point(), 1);
 	
-	solve();
-	show_values(0);
+	if(!solve()) return false;
+	//show_values(0);
 
 	//double tmpAng = 90;
 	double tmpAng = 1.570796;
@@ -643,46 +656,79 @@ void GCSWrapper::left_of(int id1, int id2)
 	double* ang = new double(tmpAng);
 	_FixedParameters.push_back(ang);
 
-	std::cout<<"tmpAng: "<<tmpAng<<"\n";
+	//std::cout<<"tmpAng: "<<tmpAng<<"\n";
 
-	//gcs_sys.addConstraintL2LAngle(l2->get_gcs_line(), l->get_gcs_line(), ang, 1);
-	//gcs_sys.addConstraintL2LAngle(l2->get_gcs_line().p1, l2->get_gcs_line().p2, l->get_gcs_line().p1, l->get_gcs_line().p2, ang, 1);
 	gcs_sys.addConstraintL2LAngle(l2->get_gcs_line().p2, l2->get_gcs_line().p1, l->get_gcs_line().p1, l->get_gcs_line().p2, ang, 1);
 
-	solve();
+	if(!solve()) return false;
 
-	std::cout<<"Angle after solve: "<<*ang<<"\n";
+	//std::cout<<"Angle after solve: "<<*ang<<"\n";
+	return true;
+}
 
-	//SaPoint* _p = (SaPoint*)get_shape(c);
+bool GCSWrapper::left_of(int id1, int id2, int id3)
+{
+	SaPoint* p = (SaPoint*)get_shape(id1);
+	SaPoint* p1 = (SaPoint*)get_shape(id2);
+	SaPoint* p2 = (SaPoint*)get_shape(id3);
+    
+	// making new point - point C
+    double c_x = 0;
+    double c_y = 0;
+    calculate_projection(p, p1, p2, c_x, c_y);
 
-	//double l_x2 = *(_p->get_gcs_point().x);
+	int c = add_point(c_x, c_y);
+    SaPoint* c_p = (SaPoint*)get_shape(c);
+    
+	//fix_line(id2);
+	collinear_point_line(c, id2, id3);
+	//	show_values(0);
+    
+    if(!solve()) return false;
+    
+	double x = *(_Parameters[_Parameters.size()-2]);
+	double y = *(_Parameters[_Parameters.size()-1]);
+    
+	double tmpAng = 1.570796;    
+	double* ang = new double(tmpAng);
+	_FixedParameters.push_back(ang);
 
-	//std::cout<<*_Parameters[_Parameters.size()-4];
-	//std::cout<<*_Parameters[_Parameters.size()-3];
+    gcs_sys.addConstraintL2LAngle(p1->get_gcs_point(), p2->get_gcs_point(), c_p->get_gcs_point(), p->get_gcs_point(), ang, 1);
+
+    if(!solve()) return false;
+    
+    return true;
+}
+
+bool GCSWrapper::left_of_centroids(int id1, int id2, int id3)
+{
+	SaCircle* p =  (SaCircle*)get_shape(id1);
+	SaCircle* p1 = (SaCircle*)get_shape(id2);
+	SaCircle* p2 = (SaCircle*)get_shape(id3);
+    
+	// making new point - point C
+    double c_x = 0;
+    double c_y = 0;
+    calculate_projection(p, p1, p2, c_x, c_y);
+    
+	int c = add_point(c_x, c_y);
+    SaPoint* c_p = (SaPoint*)get_shape(c);
+    
+    gcs_sys.addConstraintPointOnLine(c_p->get_gcs_point(), p1->get_gcs_circle().center,p2->get_gcs_circle().center, 1);
+
+	if(!solve()) return false;
 	
-	//double* d = &(_p->get_gcs_point().x);
+	double x = *(_Parameters[_Parameters.size()-2]);
+	double y = *(_Parameters[_Parameters.size()-1]);
+    
+	double tmpAng = 1.570796;
+	double* ang = new double(tmpAng);
+	_FixedParameters.push_back(ang);
 
-	//double l_x2 = (_p->get_gcs_point().x);
-	//double l_y2 = *(_p->get_gcs_point().y);
+	gcs_sys.addConstraintL2LAngle(p1->get_gcs_circle().center, p2->get_gcs_circle().center, c_p->get_gcs_point(), p->get_gcs_circle().center, ang, 1);
+	if(!solve()) return false;
 
-
-	//int l2 = add_segment(l_x1, l_y1, l_x2, l_y2);
-/*
-	
-
-	if(p_x >= l_x1 || p_x <= l_x2)
-	{
-		fix_line(id2);
-		collinear_point_line(c, id2);
-		gcs_sys.addConstraintL2LAngle(l->get_gcs_line().p1, l->get_gcs_line().p2, 
-			l->get_gcs_line().p1, p->get_gcs_point(), ang, 1);
-	}
-	else
-	{
-		gcs_sys.addConstraintL2LAngle(l->get_gcs_line().p1, l->get_gcs_line().p2, 
-			l->get_gcs_line().p1, p->get_gcs_point(), ang);
-	}
-	*/
+	return true;
 }
 
 void GCSWrapper::brace(int id1, int id2)	// id1 = line, id2 = circle
@@ -699,45 +745,89 @@ void GCSWrapper::brace(int id1, int id2)	// id1 = line, id2 = circle
 	collinear_point_line(p, id1);
 }
 
-void GCSWrapper::externally_connected(int id1, int id2)	// id1 = circle1, id2 = circle2
+bool GCSWrapper::externally_connected(int id1, int id2)	// id1 = circle1, id2 = circle2
 {
 	SaCircle* c1 = (SaCircle*)get_shape(id1);
-	SaCircle* c2 = (SaCircle*)get_shape(id2);
+ 	SaCircle* c2 = (SaCircle*)get_shape(id2);
 
 	double c1_rad = *(c1->get_gcs_circle().rad);
-	double c1_x = *(c1->get_gcs_circle().center.x);
-	double c1_y = *(c1->get_gcs_circle().center.y);
+ 	double c1_x = *(c1->get_gcs_circle().center.x);
+ 	double c1_y = *(c1->get_gcs_circle().center.y);
 
 	double c2_x = *(c2->get_gcs_circle().center.x);
-	double c2_y = *(c2->get_gcs_circle().center.y);
+ 	double c2_y = *(c2->get_gcs_circle().center.y);
 
-	int l = add_segment(c1_x, c1_y, c2_x, c2_y);
-	SaLine* l1 = (SaLine*)get_shape(l);
-	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p1, c1->get_gcs_circle().center, 1);
+	//- add line between centroids of circles
+ 	int l = add_segment(c1_x, c1_y, c2_x, c2_y);
+ 	SaLine* l1 = (SaLine*)get_shape(l);
+ 	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p1, c1->get_gcs_circle().center, 1);
+    if(!solve()) return false;
+ 	
 	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p2, c2->get_gcs_circle().center, 1);
-	
-	double dem_x = *(l1->get_gcs_line().p2.x);
-	double dem_y = *(l1->get_gcs_line().p2.y);
-	double p_x, p_y;
+	if(!solve()) return false;
 
-	// to avoid zero-division
-	if(dem_x == 0)
-		p_x = *(l1->get_gcs_line().p1.x) + rand() % 1;
-	else	
-		p_x = *(l1->get_gcs_line().p1.x) + rand() % (int)dem_x;
+	//- get midpoint of line segment
+    double midx = ((c2_x - c1_x) / 2) + c1_x;
+    double midy = ((c2_y - c1_y) / 2) + c1_y;
 	
-	if(dem_y == 0)
-		p_y = *(l1->get_gcs_line().p1.y) + rand() % 1;
-	else
-		p_y = *(l1->get_gcs_line().p1.y) + rand() % (int)dem_y;
+    //- add point coincident to line between centroids
+	int p1 = add_point(midx, midy);
+    point_segment_coincidence(p1, l);
+    if(!solve()) return false;
+    
+    //- make point the contact point of the circles
+ 	coincident_point_circle(p1, id1);
+    if(!solve()) return false;
 
-	int p1 = add_point(p_x, p_y);
-	coincident_point_circle(p1, id1);
 	coincident_point_circle(p1, id2);
-	
-	SaPoint* p = (SaPoint*)get_shape(p1);
-	gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l1->get_gcs_line(), 1);
+    if(!solve()) return false;
+
+	return true;
+	//SaPoint* p = (SaPoint*)get_shape(p1);
+	//gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l1->get_gcs_line(), 1);
+    //point_segment_coincidence(p1, l);
 }
+
+//void GCSWrapper::externally_connected(int id1, int id2)	// id1 = circle1, id2 = circle2
+ //{
+ //	SaCircle* c1 = (SaCircle*)get_shape(id1);
+ //	SaCircle* c2 = (SaCircle*)get_shape(id2);
+ //
+ //	double c1_rad = *(c1->get_gcs_circle().rad);
+ //	double c1_x = *(c1->get_gcs_circle().center.x);
+ //	double c1_y = *(c1->get_gcs_circle().center.y);
+ //
+ //	double c2_x = *(c2->get_gcs_circle().center.x);
+ //	double c2_y = *(c2->get_gcs_circle().center.y);
+ //
+ //	int l = add_segment(c1_x, c1_y, c2_x, c2_y);
+ //	SaLine* l1 = (SaLine*)get_shape(l);
+ //	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p1, c1->get_gcs_circle().center, 1);
+ //	gcs_sys.addConstraintP2PCoincident(l1->get_gcs_line().p2, c2->get_gcs_circle().center, 1);
+ //	
+ //	double dem_x = *(l1->get_gcs_line().p2.x);
+ //	double dem_y = *(l1->get_gcs_line().p2.y);
+ //	double p_x, p_y;
+ //
+ //	// to avoid zero-division
+ //	if(dem_x == 0)
+ //		p_x = *(l1->get_gcs_line().p1.x) + rand() % 1;
+ //	else	
+ //		p_x = *(l1->get_gcs_line().p1.x) + rand() % (int)dem_x;
+ //	
+ //	if(dem_y == 0)
+ //		p_y = *(l1->get_gcs_line().p1.y) + rand() % 1;
+ //	else
+ //		p_y = *(l1->get_gcs_line().p1.y) + rand() % (int)dem_y;
+ //
+ //	int p1 = add_point(p_x, p_y);
+ //	coincident_point_circle(p1, id1);
+ //	coincident_point_circle(p1, id2);
+ //	
+ //	SaPoint* p = (SaPoint*)get_shape(p1);
+ //	//gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l1->get_gcs_line(), 1);
+ //    point_segment_coincidence(p1, l);
+ //}
 
 void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
 {
@@ -756,19 +846,17 @@ void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
 	double l1_bx = l1_ax + circum2;
 
 	int l1 = add_segment(l1_ax, l1_ay, l1_bx, l1_ay);
-	fix_length(l1, circum2);
-
 	brace(l1, id2);	// id2 = id for circle2
-	
+	solve();
+
 	// for C1
 	double l2_cx = *(c1->get_gcs_circle().center.x) - r1;
 	double l2_cy = *(c1->get_gcs_circle().center.y);
 	double l2_dx = l2_cx + circum1;
 
 	int l2 = add_segment(l2_cx, l2_cy, l2_dx, l2_cy);
-	fix_length(l2, circum1);
-
 	brace(l2, id1);	// id1 = id for circle1
+	solve();
 
 	int p_c = add_point(l2_cx, l2_cy);
 	int p_d = add_point(l2_dx, l2_cy);
@@ -777,6 +865,8 @@ void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
 
 	SaLine* l_ab = (SaLine*)get_shape(l1);
 	gcs_sys.addConstraintPointOnLine(c->get_gcs_point(), l_ab->get_gcs_line(), 1);
+	solve();
+
 	gcs_sys.addConstraintPointOnLine(d->get_gcs_point(), l_ab->get_gcs_line(), 1);
 }
 
@@ -794,6 +884,8 @@ void GCSWrapper::tangential_proper_part(int id1, int id2)	// id1 = circle1, id2 
 
 	int l2 = add_segment(l2_x1_a, l2_y1_a, l2_x2, l2_y2);	// line(ab)
 	brace(l2, id2);	// BRACE(line(ab), c2);
+	solve();
+	show_values(0);
 
 	double rad1 = *(c1->get_gcs_circle().rad);
 
@@ -802,12 +894,14 @@ void GCSWrapper::tangential_proper_part(int id1, int id2)	// id1 = circle1, id2 
 
 	int l1 = add_segment(l2_x1_a, l2_y1_a, l1_x2, l1_y2);	// line(ac)
 	brace(l1, id1);	// BRACE(line(ac, c1);
+	//solve();
+	//show_values(0);
 
-	int point_c = add_point(l1_x2, l1_y2);
-	SaPoint* p_c = (SaPoint*)get_shape(point_c);
+	//int point_c = add_point(l1_x2, l1_y2);
+	//SaPoint* p_c = (SaPoint*)get_shape(point_c);
 	
-	SaLine* l_ab = (SaLine*)get_shape(l2);
-	gcs_sys.addConstraintPointOnLine(p_c->get_gcs_point(), l_ab->get_gcs_line(), 1);
+	//SaLine* l_ab = (SaLine*)get_shape(l2);
+	//gcs_sys.addConstraintPointOnLine(p_c->get_gcs_point(), l_ab->get_gcs_line(), 1);
 }
 
 void GCSWrapper::non_tangential_proper_part(int id1, int id2)	// id1 = circle1, id2 = circle2
@@ -824,6 +918,7 @@ void GCSWrapper::non_tangential_proper_part(int id1, int id2)	// id1 = circle1, 
 
 	int l2 = add_segment(l2_x1, l2_y1, l2_x2, l2_y2);	// line(ab)
 	brace(l2, id2);	// BRACE(line(ab), c2);
+	solve();
 
 	double rad1 = *(c1->get_gcs_circle().rad);
 
@@ -834,6 +929,7 @@ void GCSWrapper::non_tangential_proper_part(int id1, int id2)	// id1 = circle1, 
 
 	int l1 = add_segment(l1_x1, l1_y1, l1_x2, l1_y2);	// line(cd)
 	brace(l1, id1);
+	solve();
 
 	coincident_line_line(l1, l2);
 }
@@ -864,8 +960,14 @@ void GCSWrapper::part_of(int id1, int id2)	// id1 = circle1, id2 = circle2
 	SaLine* l2_a = (SaLine*)get_shape(l2);
 
 	brace(l2, id2);
+	solve();
+
 	brace(l1, id1);
+	solve();
+
 	gcs_sys.addConstraintPointOnLine(l2_a->get_gcs_line().p1, l1_d->get_gcs_line(), 1);
+	solve();
+
 	gcs_sys.addConstraintPointOnLine(l1_d->get_gcs_line().p2, l2_a->get_gcs_line(), 1);
 }
 
@@ -888,6 +990,7 @@ void GCSWrapper::disconnected(int id1, int id2)	// id1 = circle1, id2 = circle2
 	SaCircle* c3 = (SaCircle*)get_shape(c3_id);
 
 	brace(l_p1p2_id, c3_id);	// BRACE
+	solve();
 
 	double p_ax = *(c1->get_gcs_circle().center.x) + rad1;
 	double p_ay = *(c1->get_gcs_circle().center.y);
@@ -903,12 +1006,15 @@ void GCSWrapper::disconnected(int id1, int id2)	// id1 = circle1, id2 = circle2
 
 	// COIN(A, L(P1, P3)
 	gcs_sys.addConstraintPointOnLine(p_a->get_gcs_point(), c1->get_gcs_circle().center, c3->get_gcs_circle().center, 1);
-	
+	solve();
+
 	// COIN(A, C1);
 	coincident_point_circle(a, id1);
-	
+	solve();
+
 	// COIN(B, L(P2, P3)
 	gcs_sys.addConstraintPointOnLine(p_b->get_gcs_point(), c2->get_gcs_circle().center, c3->get_gcs_circle().center, 1);
+	solve();
 
 	// COIN(B, C2)
 	coincident_point_circle(b, id2);
@@ -1084,6 +1190,56 @@ void GCSWrapper::fix_circle_radius(int id, double radius)
 	_FixedParameters.push_back(d);
 	
 	gcs_sys.addConstraintCircleRadius(c->get_gcs_circle(), d, 1);
+
+	//gcs_sys.addConstraint
+}
+
+void GCSWrapper::fix_circle(int id)
+{
+	SaCircle* c = (SaCircle*)get_shape(id);
+    double radius = *(c->get_gcs_circle().rad);
+
+    //- fix the circle radius+    
+	double* d = new double(radius);
+	_FixedParameters.push_back(d);
+	
+	gcs_sys.addConstraintCircleRadius(c->get_gcs_circle(), d, 1);
+    solve();
+    
+    //- fix the centre point
+    double x = *(c->get_gcs_circle().center.x);
+    double y = *(c->get_gcs_circle().center.y);
+    
+    double* xp = new double(x);
+	double* yp = new double(y);
+    
+	_FixedParameters.push_back(xp);
+	_FixedParameters.push_back(yp);
+    
+	gcs_sys.addConstraintCoordinateX(c->get_gcs_circle().center, xp, 1);
+    solve();
+	gcs_sys.addConstraintCoordinateY(c->get_gcs_circle().center, yp, 1);
+    solve();
+}
+
+void GCSWrapper::fix_circle_centroid(int id)
+{
+	SaCircle* c = (SaCircle*)get_shape(id);
+    
+    //- fix the centre point
+    double x = *(c->get_gcs_circle().center.x);
+    double y = *(c->get_gcs_circle().center.y);
+    
+    double* xp = new double(x);
+	double* yp = new double(y);
+    
+	_FixedParameters.push_back(xp);
+	_FixedParameters.push_back(yp);
+    
+	gcs_sys.addConstraintCoordinateX(c->get_gcs_circle().center, xp, 1);
+    solve();
+	gcs_sys.addConstraintCoordinateY(c->get_gcs_circle().center, yp, 1);
+    solve();
 }
 
 /*
@@ -1301,6 +1457,48 @@ void GCSWrapper::calculate_rotate_line(SaLine* l, double& x1,  double& y1, doubl
 	std::cout<<x1<<"\n"<<y1<<"\n"<<x2<<"\n"<<y2;
 }
 
+
+void GCSWrapper::calculate_projection(SaPoint* p, SaPoint* p1, SaPoint* p2, double &prjX, double &prjY)
+{
+	double xa = *(p1->get_gcs_point().x);
+	double ya = *(p1->get_gcs_point().y);
+	double xb = *(p2->get_gcs_point().x);
+	double yb = *(p2->get_gcs_point().y);
+    
+	double xp = *(p->get_gcs_point().x);
+	double yp = *(p->get_gcs_point().y);
+    
+    double prjval = (xp - xa) * (xb - xa) + (yp - ya) * (yb - ya);
+    
+    double lim = (xb - xa)*(xb - xa) + (yb - ya)*(yb - ya);
+    double norm = prjval / lim;
+    
+    prjX = (xb - xa) * norm + xa;
+    prjY = (yb - ya) * norm + ya;
+}
+
+void GCSWrapper::calculate_projection(SaCircle* p, SaCircle* p1, SaCircle* p2, double &prjX, double &prjY)
+{
+    //	double p_x = *(p->get_gcs_circle().center.x);
+
+	double xa = *(p1->get_gcs_circle().center.x);
+	double ya = *(p1->get_gcs_circle().center.y);
+	double xb = *(p2->get_gcs_circle().center.x);
+	double yb = *(p2->get_gcs_circle().center.y);
+    
+	double xp = *(p->get_gcs_circle().center.x);
+	double yp = *(p->get_gcs_circle().center.y);
+    
+    double prjval = (xp - xa) * (xb - xa) + (yp - ya) * (yb - ya);
+    
+    double lim = (xb - xa)*(xb - xa) + (yb - ya)*(yb - ya);
+    double norm = prjval / lim;
+    
+    prjX = (xb - xa) * norm + xa;
+    prjY = (yb - ya) * norm + ya;
+    
+}
+
 bool GCSWrapper::calculate_is_left_of(SaPoint* p, SaLine* l)
 {	
 	double xa = *(l->get_gcs_line().p1.x);
@@ -1311,5 +1509,18 @@ bool GCSWrapper::calculate_is_left_of(SaPoint* p, SaLine* l)
 	double xp = *(p->get_gcs_point().x);
 	double yp = *(p->get_gcs_point().y);
 
+	return (xb - xa)*(yp - ya) > (yb - ya)*(xp - xa);
+}
+
+bool GCSWrapper::calculate_is_left_of(SaPoint* p, SaPoint* p1, SaPoint* p2)
+{
+	double xa = *(p1->get_gcs_point().x);
+	double ya = *(p1->get_gcs_point().y);
+	double xb = *(p2->get_gcs_point().x);
+	double yb = *(p2->get_gcs_point().y);
+    
+	double xp = *(p->get_gcs_point().x);
+	double yp = *(p->get_gcs_point().y);
+    
 	return (xb - xa)*(yp - ya) > (yb - ya)*(xp - xa);
 }

@@ -594,11 +594,12 @@ void test_externally_connected()
 void test_proper_part()
 {
 	GCSWrapper* wrapper = new GCSWrapper();
-	int c1 = wrapper->add_circle(1.0, 0.0, 2.0);
-	int c2 = wrapper->add_circle(0.0, 0.0, 3.0);
+	int c1 = wrapper->add_circle(10.0, 1.0, 2.0);
+	int c2 = wrapper->add_circle(0.0, 0.0, 7.0);
 
-	wrapper->fix_circle_radius(c1, 2.0);
-	wrapper->fix_circle_radius(c2, 3.0);
+	
+	wrapper->fix_circle_radius(c1, 5.0);
+	wrapper->fix_circle_radius(c2, 8.0);
 
 	wrapper->proper_part(c1, c2);
 	std::cout<<std::endl<<"before solving"<<std::endl;
@@ -620,7 +621,7 @@ void test_tangential_proper_part()
 	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
 
 	wrapper->fix_circle_radius(c1, 2.0);
-	wrapper->fix_circle_radius(c2, 3.0);
+	wrapper->fix_circle_radius(c2, 5.0);
 
 	wrapper->tangential_proper_part(c1, c2);
 	std::cout<<std::endl<<"before solving"<<std::endl;
@@ -683,10 +684,10 @@ void test_disconnected()
 {
 	GCSWrapper* wrapper = new GCSWrapper();
 	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
-	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 2.0);
 
 	wrapper->fix_circle_radius(c1, 2.0);
-	wrapper->fix_circle_radius(c2, 3.0);
+	wrapper->fix_circle_radius(c2, 2.0);
 
 	wrapper->disconnected(c1, c2);
 	std::cout<<std::endl<<"before solving"<<std::endl;
@@ -776,13 +777,13 @@ int run_test()
 
 	//test_brace();
 	//test_externally_connected();
-	//test_proper_part();
+	test_proper_part();
 	//test_tangential_proper_part();
 	//test_non_tangential_proper_part();
 	//test_part_of();
 	//test_disconnected();
 	//test_p_disjunction();
-	test_dr_disjunction();
+	//test_dr_disjunction();
 
 	//GCS::Test1 *test1 = new GCS::Test1();
 	//GCS::Test2 *test2 = new GCS::Test2();
