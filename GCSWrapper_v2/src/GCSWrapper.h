@@ -80,6 +80,7 @@ public:
 	void collinear_point_line(int id1, int id2);	// id1 = point, id2 = line
 	void coincident_point_circle(int id1, int id2);	// id1 = point, id2 = circle
 	void coincident_line_circle(int id1, int id2);	// id1 = line, id2 = circle
+	void coincident_line_line(int id1, int id2);
 
 	//void angle(int id1, int id2, int id3, double angle);
 
@@ -105,6 +106,12 @@ public:
 	void brace(int id1, int id2);	// id1 = line, id2 = circle
 	void externally_connected(int id1, int id2);	// id1 = circle1, id2 = circle2
 	void proper_part(int id1, int id2);	// id1 = circle1, id2 = circle2
+	void tangential_proper_part(int id1, int id2);	// id1 = circle1, id2 = circle2
+	void non_tangential_proper_part(int id1, int id2);	// id1 = circle1, id2 = circle2
+	void part_of(int id1, int id2);	// id1 = circle1, id2 = circle2
+	void disconnected(int id1, int id2);	// id1 = circle1, id2 = circle2
+	void p_disjunction(int id1, int id2);
+	void dr_disjunction(int id1, int id2);
 
 	void calculate_line_length(SaLine* l, double& lgh);
 	void calculate_line_midpoint(SaLine* l, double& x, double& y);

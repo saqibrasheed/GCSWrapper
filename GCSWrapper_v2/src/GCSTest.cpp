@@ -610,6 +610,139 @@ void test_proper_part()
 	wrapper->show_values(0);
 }
 
+////////////////////////////
+// Tangential Proper Part //
+////////////////////////////
+void test_tangential_proper_part()	
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->tangential_proper_part(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
+
+////////////////////////////////
+// Non-Tangential Proper Part //
+////////////////////////////////
+void test_non_tangential_proper_part()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->non_tangential_proper_part(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
+
+/////////////
+// Part of //
+/////////////
+void test_part_of()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->part_of(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
+
+//////////////////
+// Disconnected //
+//////////////////
+void test_disconnected()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->disconnected(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
+
+/////////////////////
+// P (Disjunction) //
+/////////////////////
+void test_p_disjunction()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->p_disjunction(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
+
+//////////////////////
+// DR (Disjunction) //
+//////////////////////
+void test_dr_disjunction()
+{
+	GCSWrapper* wrapper = new GCSWrapper();
+	int c1 = wrapper->add_circle(5.0, 0.0, 2.0);
+	int c2 = wrapper->add_circle(8.0, 0.0, 5.0);
+
+	wrapper->fix_circle_radius(c1, 2.0);
+	wrapper->fix_circle_radius(c2, 3.0);
+
+	wrapper->dr_disjunction(c1, c2);
+	std::cout<<std::endl<<"before solving"<<std::endl;
+	wrapper->show_values(0);
+
+	wrapper->solve();
+
+	std::cout<<std::endl<<"after solving"<<std::endl;
+	wrapper->show_values(0);
+}
+
+
 int run_test()
 {
 	//test_line_circle_coincident();
@@ -643,7 +776,13 @@ int run_test()
 
 	//test_brace();
 	//test_externally_connected();
-	test_proper_part();
+	//test_proper_part();
+	//test_tangential_proper_part();
+	//test_non_tangential_proper_part();
+	//test_part_of();
+	//test_disconnected();
+	//test_p_disjunction();
+	test_dr_disjunction();
 
 	//GCS::Test1 *test1 = new GCS::Test1();
 	//GCS::Test2 *test2 = new GCS::Test2();

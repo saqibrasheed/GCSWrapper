@@ -486,6 +486,15 @@ void GCSWrapper::collinear_point_line(int id1, int id2)
 	gcs_sys.addConstraintPointOnLine(p->get_gcs_point(), l->get_gcs_line(), 1);
 }
 
+void GCSWrapper::coincident_line_line(int id1, int id2)	
+{
+	SaLine* l1 = (SaLine*)get_shape(id1);
+	SaLine* l2 = (SaLine*)get_shape(id2);
+
+	gcs_sys.addConstraintPointOnLine(l1->get_gcs_line().p1, l2->get_gcs_line(), 1);
+	gcs_sys.addConstraintPointOnLine(l1->get_gcs_line().p2, l2->get_gcs_line(), 1);
+}
+
 /*void GCSWrapper::point_segment_coincidence(int id1, int id2)	// id1 = point, id2 = line
 {
 	SaPoint* p1 = (SaPoint*)get_shape(id1);
@@ -755,7 +764,7 @@ void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
 	double l2_cx = *(c1->get_gcs_circle().center.x) - r1;
 	double l2_cy = *(c1->get_gcs_circle().center.y);
 	double l2_dx = l2_cx + circum1;
-	
+
 	int l2 = add_segment(l2_cx, l2_cy, l2_dx, l2_cy);
 	fix_length(l2, circum1);
 
@@ -769,6 +778,225 @@ void GCSWrapper::proper_part(int id1, int id2)		// id1 = circle1, id2 = circle2
 	SaLine* l_ab = (SaLine*)get_shape(l1);
 	gcs_sys.addConstraintPointOnLine(c->get_gcs_point(), l_ab->get_gcs_line(), 1);
 	gcs_sys.addConstraintPointOnLine(d->get_gcs_point(), l_ab->get_gcs_line(), 1);
+}
+
+void GCSWrapper::tangential_proper_part(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);	// inner circle
+	SaCircle* c2 = (SaCircle*)get_shape(id2);	// outer circle
+
+	double rad2 = *(c2->get_gcs_circle().rad);
+	
+	double l2_x1_a = *(c2->get_gcs_circle().center.x) - rad2;	
+	double l2_x2 = *(c2->get_gcs_circle().center.x) + rad2;	
+	double l2_y1_a = *(c2->get_gcs_circle().center.y);
+	double l2_y2 = *(c2->get_gcs_circle().center.y);
+
+	int l2 = add_segment(l2_x1_a, l2_y1_a, l2_x2, l2_y2);	// line(ab)
+	brace(l2, id2);	// BRACE(line(ab), c2);
+
+	double rad1 = *(c1->get_gcs_circle().rad);
+
+	double l1_x2 = *(c1->get_gcs_circle().center.x) + rad1;
+	double l1_y2 = *(c1->get_gcs_circle().center.y);
+
+	int l1 = add_segment(l2_x1_a, l2_y1_a, l1_x2, l1_y2);	// line(ac)
+	brace(l1, id1);	// BRACE(line(ac, c1);
+
+	int point_c = add_point(l1_x2, l1_y2);
+	SaPoint* p_c = (SaPoint*)get_shape(point_c);
+	
+	SaLine* l_ab = (SaLine*)get_shape(l2);
+	gcs_sys.addConstraintPointOnLine(p_c->get_gcs_point(), l_ab->get_gcs_line(), 1);
+}
+
+void GCSWrapper::non_tangential_proper_part(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);	// inner circle
+	SaCircle* c2 = (SaCircle*)get_shape(id2);	// outer circle
+
+	double rad2 = *(c2->get_gcs_circle().rad);
+	
+	double l2_x1 = *(c2->get_gcs_circle().center.x) - rad2;	
+	double l2_x2 = *(c2->get_gcs_circle().center.x) + rad2;	
+	double l2_y1 = *(c2->get_gcs_circle().center.y);
+	double l2_y2 = *(c2->get_gcs_circle().center.y);
+
+	int l2 = add_segment(l2_x1, l2_y1, l2_x2, l2_y2);	// line(ab)
+	brace(l2, id2);	// BRACE(line(ab), c2);
+
+	double rad1 = *(c1->get_gcs_circle().rad);
+
+	double l1_x1 = *(c1->get_gcs_circle().center.x) - rad1;
+	double l1_x2 = *(c1->get_gcs_circle().center.x) + rad1;
+	double l1_y1 = *(c1->get_gcs_circle().center.y);
+	double l1_y2 = *(c1->get_gcs_circle().center.y);
+
+	int l1 = add_segment(l1_x1, l1_y1, l1_x2, l1_y2);	// line(cd)
+	brace(l1, id1);
+
+	coincident_line_line(l1, l2);
+}
+
+void GCSWrapper::part_of(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);
+	SaCircle* c2 = (SaCircle*)get_shape(id2);
+
+	double rad1 = *(c1->get_gcs_circle().rad);
+
+	double l1_x1 = *(c1->get_gcs_circle().center.x) - rad1;
+	double l1_x2 = *(c1->get_gcs_circle().center.x) + rad1;
+	double l1_y1 = *(c1->get_gcs_circle().center.y);
+	double l1_y2 = *(c1->get_gcs_circle().center.y);
+
+	int l1 = add_segment(l1_x1, l1_y1, l1_x2, l1_y2);	// line(cd)
+	SaLine* l1_d = (SaLine*)get_shape(l1);
+
+	double rad2 = *(c2->get_gcs_circle().rad);
+	
+	double l2_x1 = *(c2->get_gcs_circle().center.x) - rad2;	
+	double l2_x2 = *(c2->get_gcs_circle().center.x) + rad2;	
+	double l2_y1 = *(c2->get_gcs_circle().center.y);
+	double l2_y2 = *(c2->get_gcs_circle().center.y);
+
+	int l2 = add_segment(l2_x1, l2_y1, l2_x2, l2_y2);	// line(ab)
+	SaLine* l2_a = (SaLine*)get_shape(l2);
+
+	brace(l2, id2);
+	brace(l1, id1);
+	gcs_sys.addConstraintPointOnLine(l2_a->get_gcs_line().p1, l1_d->get_gcs_line(), 1);
+	gcs_sys.addConstraintPointOnLine(l1_d->get_gcs_line().p2, l2_a->get_gcs_line(), 1);
+}
+
+void GCSWrapper::disconnected(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);
+	SaCircle* c2 = (SaCircle*)get_shape(id2);
+
+	int l_p1p2_id = add_segment(*(c1->get_gcs_circle().center.x), *(c1->get_gcs_circle().center.y), 
+		*(c2->get_gcs_circle().center.x), *(c2->get_gcs_circle().center.y));	// l(p1, p2)
+
+	double l1_x1, l1_y1, l1_length;
+	SaLine* l_p1p2 = (SaLine*)get_shape(l_p1p2_id);
+
+	calculate_line_midpoint(l_p1p2, l1_x1, l1_y1);
+	calculate_line_length(l_p1p2, l1_length);
+	
+	double rad1 = l1_length / 2;
+	int c3_id = add_circle(l1_x1, l1_y1, rad1);	// circle3
+	SaCircle* c3 = (SaCircle*)get_shape(c3_id);
+
+	brace(l_p1p2_id, c3_id);	// BRACE
+
+	double p_ax = *(c1->get_gcs_circle().center.x) + rad1;
+	double p_ay = *(c1->get_gcs_circle().center.y);
+
+	int a = add_point(p_ax, p_ay);
+	SaPoint* p_a = (SaPoint*)get_shape(a);
+
+	double p_bx = *(c2->get_gcs_circle().center.x) - *(c2->get_gcs_circle().rad);
+	double p_by = *(c2->get_gcs_circle().center.y);
+	
+	int b = add_point(p_bx, p_by);
+	SaPoint* p_b = (SaPoint*)get_shape(b);
+
+	// COIN(A, L(P1, P3)
+	gcs_sys.addConstraintPointOnLine(p_a->get_gcs_point(), c1->get_gcs_circle().center, c3->get_gcs_circle().center, 1);
+	
+	// COIN(A, C1);
+	coincident_point_circle(a, id1);
+	
+	// COIN(B, L(P2, P3)
+	gcs_sys.addConstraintPointOnLine(p_b->get_gcs_point(), c2->get_gcs_circle().center, c3->get_gcs_circle().center, 1);
+
+	// COIN(B, C2)
+	coincident_point_circle(b, id2);
+}
+
+void GCSWrapper::p_disjunction(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);
+	SaCircle* c2 = (SaCircle*)get_shape(id2);
+
+	double l_cd_x1 = *(c1->get_gcs_circle().center.x) - *(c1->get_gcs_circle().rad);
+	double l_cd_y1 = *(c1->get_gcs_circle().center.y);
+	double l_cd_x2 = *(c1->get_gcs_circle().center.x) + *(c1->get_gcs_circle().rad);
+	double l_cd_y2 = *(c1->get_gcs_circle().center.y);
+
+	double l_ab_x1 = *(c2->get_gcs_circle().center.x) - *(c2->get_gcs_circle().rad);
+	double l_ab_y1 = *(c2->get_gcs_circle().center.y);
+	double l_ab_x2 = *(c2->get_gcs_circle().center.x) + *(c2->get_gcs_circle().rad);
+	double l_ab_y2 = *(c2->get_gcs_circle().center.y);
+
+	int l_ab = add_segment(l_ab_x1, l_ab_y1, l_ab_x2, l_ab_y2);
+	int l_cd = add_segment(l_cd_x1, l_cd_y1, l_cd_x2, l_cd_y2);
+
+	// BRACE(L(a,b), C2)
+	brace(l_ab, id2);
+
+	// BRACE(L(c,d), C1)
+	brace(l_cd, id1);
+
+	// COIN(L(c,d), L(a,b))
+	coincident_line_line(l_cd, l_ab);
+}
+
+void GCSWrapper::dr_disjunction(int id1, int id2)	// id1 = circle1, id2 = circle2
+{
+	SaCircle* c1 = (SaCircle*)get_shape(id1);
+	SaCircle* c2 = (SaCircle*)get_shape(id2);
+
+	double p1_x = *(c1->get_gcs_circle().center.x);
+	double p1_y = *(c1->get_gcs_circle().center.y);
+
+	double p2_x = *(c2->get_gcs_circle().center.x);
+	double p2_y = *(c2->get_gcs_circle().center.y);
+
+	int p1p2 = add_segment(p1_x, p1_y, p2_x, p2_y);
+	SaLine* l_p1p2 = (SaLine*)get_shape(p1p2);
+
+	double c_x, c_y, c_len;
+	calculate_line_midpoint(l_p1p2, c_x, c_y);
+	calculate_line_length(l_p1p2, c_len);
+
+	double c_rad = c_len / 2;
+	
+	int c_c3 = add_circle(c_x, c_y, c_rad);
+	SaCircle* c3 = (SaCircle*)get_shape(c_c3);
+
+	// brace
+	brace(p1p2, c_c3);
+
+	int p_a_x = p1_x + *(c1->get_gcs_circle().rad);
+	int p_a_y = p1_y;
+
+	int p_a = add_point(p_a_x, p_a_y);
+
+	int p1p3 = add_segment(p1_x, p1_y, *(c3->get_gcs_circle().center.x), *(c3->get_gcs_circle().center.y));
+	SaLine* l_p1p3 = (SaLine*)get_shape(p1p3);
+	fix_line(p1p3);
+
+	// COIN
+	coincident_line_circle(p_a, p1p3);
+
+	// COIN
+	coincident_point_circle(p_a, id1);
+
+	int p_b_x = p2_x - *(c2->get_gcs_circle().rad);
+	int p_b_y = p2_y;
+
+	int p_b = add_point(p_b_x, p_b_y);
+
+	int p2p3 = add_segment(p2_x, p2_y, *(c3->get_gcs_circle().center.x), *(c3->get_gcs_circle().center.y));
+	SaLine* l_p2p3 = (SaLine*)get_shape(p2p3);
+	fix_line(p2p3);
+
+	// COIN
+	collinear_point_line(p_b, p2p3);
+
+	// COIN
+	coincident_point_circle(p_b, id2);
 }
 
 void GCSWrapper::angle_line_circle(int id1, int id2, double angle)	// id1 = line, id2 = circle
@@ -1045,8 +1273,6 @@ void GCSWrapper::calculate_line_midpoint(SaLine* l, double& x, double& y)
 
 	x = x1 + ((x2 - x1) / 2);
 	y = y1 + ((y2 - y1) / 2);
-
-	//std::cout<<x<<"\n"<<y;
 }
 
 void GCSWrapper::calculate_rotate_line(SaLine* l, double& x1,  double& y1, double& x2,  double& y2)
