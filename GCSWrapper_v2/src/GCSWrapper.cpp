@@ -2705,14 +2705,113 @@ void GCSWrapper::angle_line_circle(int id1, int id2, double angle)	// id1 = line
 }
 
 
-void GCSWrapper::circle_min_diameter(int id, double diameter)
+bool GCSWrapper::circle_min_diameter(int id, double diameter)
 {
-	int s1 = add_segment(0.0, 0.0, 0.0, diameter);		
-	
-	line_vertical(s1);
-	fix_length(s1, diameter);
-	coincident_line_circle(s1, id);
+    SaCircle* c1 = (SaCircle*)get_shape(id);
+    double c1_rad = *(c1->get_gcs_circle().rad);
+	double c1_x = *(c1->get_gcs_circle().center.x);
+	double c1_y = *(c1->get_gcs_circle().center.y);
+
+    //- find coordinates for new line segment
+    double min_rad = diameter/2;
+    double ly1 = c1_y + min_rad;
+    double ly2 = c1_y - min_rad;
+    
+    double lx=0;
+    if(c1_rad <= min_rad)
+    {   //- case: circle is already smaller than this minimum bound
+        lx = c1_x;
+    } else
+    {   //- case: circle is larger than minimum bound, place vertical segment at correct position
+        lx = c1_x + std::sqrt(c1_rad * c1_rad - min_rad * min_rad);
+    }
+    
+    //- create line segment
+    int s1 = add_segment(lx, ly1, lx, ly2);
+    SaLine* l = (SaLine*)get_shape(s1);
+    
+   
+    //- make vertical
+	gcs_sys.addConstraintVertical(l->get_gcs_line(), 1);
+    if(!solve()) return false;
+    
+    
+    //- fix line length
+    double* dia = new double(diameter);
+	_FixedParameters.push_back(dia);
+    gcs_sys.addConstraintDifference(l->get_gcs_line().p2.y, l->get_gcs_line().p1.y, dia, 1);
+//	gcs_sys.addConstraintP2PDistance(l->get_gcs_line().p1, l->get_gcs_line().p2, dia, 1);
+    if(!solve()) return false;
+
+    
+    //- make line coincident to circle
+    gcs_sys.addConstraintPointOnCircle(l->get_gcs_line().p1, c1->get_gcs_circle(), 1);
+    if(!solve()) return false;
+	gcs_sys.addConstraintPointOnCircle(l->get_gcs_line().p2, c1->get_gcs_circle(), 1);
+    if(!solve()) return false;
+
+    return true;
+    
+//	int s1 = add_segment(0.0, 0.0, 0.0, diameter);		
+//	
+//	line_vertical(s1);
+//	fix_length(s1, diameter);
+//	coincident_line_circle(s1, id);
 }
+
+
+
+bool GCSWrapper::circle_max_diameter(int id, double diameter)
+{
+    SaCircle* c1 = (SaCircle*)get_shape(id);
+    double c1_rad = *(c1->get_gcs_circle().rad);
+	double c1_x = *(c1->get_gcs_circle().center.x);
+	double c1_y = *(c1->get_gcs_circle().center.y);
+    
+    double max_rad = diameter/2;
+    
+    //- create pa on circle
+    int pa_id = add_point(c1_x + c1_rad, c1_y);
+    SaPoint* pa = (SaPoint*)get_shape(pa_id);
+    gcs_sys.addConstraintPointOnCircle(pa->get_gcs_point(), c1->get_gcs_circle(), 1);
+    if(!solve()) return false;
+    
+    std::cout << "V1: " << std::endl;
+    show_values(0);
+    
+    //- constrain point to be horizontally aligned with circle centroid
+    gcs_sys.addConstraintHorizontal(c1->get_gcs_circle().center, pa->get_gcs_point(), 1);
+    if(!solve()) return false;
+
+    std::cout << "V2: " << std::endl;
+    show_values(0);
+
+    //- create distance point
+    double pbx = std::min(c1_rad, max_rad);
+    double pby = std::sqrt(max_rad * max_rad - pbx * pbx);
+    int pb_id = add_point(pbx + c1_x, pby + c1_y);
+    SaPoint* pb = (SaPoint*)get_shape(pb_id);
+    
+    //- fix maximum distance
+    double* mxrd = new double(max_rad);
+	_FixedParameters.push_back(mxrd);
+	gcs_sys.addConstraintP2PDistance(c1->get_gcs_circle().center, pb->get_gcs_point(), mxrd, 1);
+    if(!solve()) return false;
+    
+    std::cout << "V3: " << std::endl;
+    show_values(0);
+    //- constrain distance point and pa to be vertically aligned
+    gcs_sys.addConstraintVertical(pa->get_gcs_point(), pb->get_gcs_point(), 1);
+    if(!solve()) return false;
+
+    std::cout << "V4: " << std::endl;
+    show_values(0);
+
+    return true;
+}
+
+
+
 
 void GCSWrapper::fix_circle_radius(int id, double radius)
 {

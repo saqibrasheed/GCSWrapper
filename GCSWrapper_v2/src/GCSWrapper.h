@@ -104,7 +104,8 @@ public:
 	bool left_of(int id1, int id2);
     bool left_of(int id1, int id2, int id3);
     bool left_of_centroids(int id1, int id2, int id3);
-	void circle_min_diameter(int id, double diameter);
+	bool circle_min_diameter(int id, double diameter);
+	bool circle_max_diameter(int id, double diameter);
 	void point_segment_coincidence(int id1, int id2);
 	void angle_line_circle(int id1, int id2, double angle);
 	
