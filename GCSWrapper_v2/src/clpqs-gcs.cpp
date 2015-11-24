@@ -266,3 +266,24 @@ PREDICATE(end_point_concentric, 3)
     return _gcs_wrap->end_point_concentric((int)A1, (int)A2, (int)A3);
 }
 
+PREDICATE(make_vertical,1)
+{
+    return _gcs_wrap->line_vertical((int)A1);
+}
+
+PREDICATE(make_tpp,2)
+{
+    //- make_ec(IdA+, IdB+)
+   	return _gcs_wrap->tpp((int)A1, (int)A2);
+   
+}
+
+
+
+
+
+
+
+
+
+

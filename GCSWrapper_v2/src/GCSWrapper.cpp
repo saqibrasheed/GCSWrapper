@@ -491,10 +491,13 @@ void GCSWrapper::parallel(int id1, int id2)	{
 	*/
 }
 
-void GCSWrapper::line_vertical(int id)
+bool GCSWrapper::line_vertical(int id)
 {
 	SaLine* l = (SaLine*)get_shape(id);
 	gcs_sys.addConstraintVertical(l->get_gcs_line(), 1);
+    if(!solve()) return false;
+
+    return true;
 }
 
 void GCSWrapper::coincident_point_circle(int id1, int id2)
@@ -1268,8 +1271,22 @@ bool GCSWrapper::tpp(int id1, int id2)
 	rad_diff = (c1_rad - c2_rad) * (c1_rad - c2_rad);
 	dist_sqrt = std::sqrt(dist);
 	
-	double p_c_x = 2 * c1_x - p_a_x;
-	double p_c_y = 2 * c1_y - p_a_y;
+//	double p_c_x = 2 * c1_x - p_a_x;
+//	double p_c_y = 2 * c1_y - p_a_y;
+    
+    double p_c_x = 0;
+    double p_c_y = 0;
+    
+    if(c1_rad < c2_rad)
+    {
+        p_c_x = c1_x + v_n_x * -1 * c1_rad;
+        p_c_y = c1_y + v_n_y * -1 * c1_rad;
+    } else
+    {
+        p_c_x = c2_x + v_n_x * -1 * c2_rad * 0.95;
+        p_c_y = c2_y + v_n_y * -1 * c2_rad * 0.95;
+        
+    }
 
 	int pnt_c = add_point(p_c_x, p_c_y);
 	SaPoint* p_c = (SaPoint*)get_shape(pnt_c);

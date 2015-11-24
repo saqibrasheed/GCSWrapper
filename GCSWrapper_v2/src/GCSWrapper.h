@@ -87,7 +87,7 @@ public:
 
 	//void angle(int id1, int id2, int id3, double angle);
 
-	void line_vertical(int id1);
+	bool line_vertical(int id1);
 	//void point_vertical(int id1, int id2);
 
 	void fix_length(int id, double length);	// to set the constraint to fix the length of a line

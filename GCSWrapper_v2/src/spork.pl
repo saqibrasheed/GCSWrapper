@@ -55,6 +55,8 @@ is_constraint(max_radius(_,_)).
 is_constraint(min_length(_,_)).
 is_constraint(max_length(_,_)).
 is_constraint(coincident(_,_)).
+is_constraint(vertical(_)).
+is_constraint(pp(_,_)).
 
 create_constraint(min_radius(Obj, Val)) :-
   object_id(Obj, id(ObjId)),
@@ -75,6 +77,16 @@ create_constraint(max_length(Obj, Val)) :-
   object_id(Obj, id(ObjId)),
   line_brace_(ObjId, CircId),
   clpqs_gcs:make_max_diameter(CircId, Val).
+
+
+create_constraint(vertical(Obj)) :-
+  object_id(Obj, id(ObjId)),
+  clpqs_gcs:make_vertical(ObjId).
+
+create_constraint(pp(ObjA,ObjB)) :-
+  object_id(ObjA, id(IdA)),
+  object_id(ObjB, id(IdB)),
+  clpqs_gcs:make_tpp(IdA, IdB).
 
   
 create_constraint(coincident(EndPoint, centre(ObjB))) :-
@@ -199,5 +211,34 @@ diagram(Objs, filename(t1)),
 create_constraints(Objs),
 diagram(Objs, filename(t2)).
 
+
+%%%
+
+clpqs_gcs:reset,
+
+Objs = [
+ line(spoon_handle),
+ vertical(spoon_handle)
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
+
+%%%
+
+clpqs_gcs:reset,
+
+Objs = [
+ circle(spoon_head),
+ circle(spoon_well),
+ pp(spoon_well, spoon_head) 
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
 
 **/
