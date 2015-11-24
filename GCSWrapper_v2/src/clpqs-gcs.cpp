@@ -72,6 +72,20 @@ PREDICATE(point_params,3)
     return TRUE;
 }
 
+PREDICATE(line_params,5)
+{
+    //- line_params(ShpPtr+, X1-, Y1-, X2-, Y2-)
+    
+    SaLine* shp = (SaLine*)  (void*) A1;
+    A2 = *(shp->get_gcs_line().p1.x);
+    A3 = *(shp->get_gcs_line().p1.y);
+    A4 = *(shp->get_gcs_line().p2.x);
+    A5 = *(shp->get_gcs_line().p2.y);
+    
+    return TRUE;
+}
+
+
 PREDICATE(set_point_params,3)
 {
     //- new_point(Id, X, Y)
@@ -129,6 +143,35 @@ PREDICATE(new_point,3)
     return TRUE;
 }
 
+
+PREDICATE(new_line,5)
+{
+    //- new_line(Id, X1, Y1, X2, Y2)
+    
+    
+    //double id = (double) A1[0];
+    double x1 =  (double) A2;
+    double y1 =  (double) A3;
+    double x2 =  (double) A4;
+    double y2 =  (double) A5;
+    
+    A1 = _gcs_wrap->add_segment(x1,y1,x2,y2);
+    return TRUE;
+}
+
+
+
+PREDICATE(new_brace_for_line,2)
+{
+    //- Input a line, creates a circle brace
+    
+    //- new_brace(IdCircleBrace+, IdLine+)
+    int c_id = 0;
+    bool succ = _gcs_wrap->create_brace_for_line((int)A2, c_id);
+    A1 = c_id;
+
+    return succ;
+}
 
 
 //---- CONSTRAINT SYSTEM ----//
@@ -215,5 +258,11 @@ PREDICATE(make_max_diameter,2)
 }
 
 
-
+PREDICATE(end_point_concentric, 3)
+{
+    //- end_point_concentric(LineId+, EndPoint+, CircId+)
+    //- P1 should be either "1" or "2"
+    
+    return _gcs_wrap->end_point_concentric((int)A1, (int)A2, (int)A3);
+}
 

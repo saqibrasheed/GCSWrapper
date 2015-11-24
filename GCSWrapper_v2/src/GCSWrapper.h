@@ -128,6 +128,10 @@ public:
 	void p_disjunction(int id1, int id2);
 	void dr_disjunction(int id1, int id2);
 	bool equal(int id1, int id2);
+    
+    bool create_brace_for_line(int line_id, int& c_id);
+    bool end_point_concentric(int line_id, int endPt, int circ_id);
+
 
 	void calculate_line_length(SaLine* l, double& lgh);
 	void calculate_line_midpoint(SaLine* l, double& x, double& y);
