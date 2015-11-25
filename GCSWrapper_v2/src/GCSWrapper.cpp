@@ -2797,6 +2797,56 @@ bool GCSWrapper::circle_min_diameter(int id, double diameter)
 }
 
 
+bool GCSWrapper::larger(int id1, int id2)
+{   //- constraint: circle1 is larger than circle2
+    
+    SaCircle* c1 = (SaCircle*)get_shape(id1);
+ 	SaCircle* c2 = (SaCircle*)get_shape(id2);
+    
+	double c1_rad = *(c1->get_gcs_circle().rad);
+	double c1_x = *(c1->get_gcs_circle().center.x);
+	double c1_y = *(c1->get_gcs_circle().center.y);
+	
+	double c2_rad = *(c2->get_gcs_circle().rad);
+	double c2_x = *(c2->get_gcs_circle().center.x);
+	double c2_y = *(c2->get_gcs_circle().center.y);
+    
+    //- create 'mirror' circle concentric to smaller circle, equal radius with larger circle
+	int ci_id = add_circle(c2_x, c2_y, c1_rad);
+	SaCircle* ci = (SaCircle*)get_shape(ci_id);
+    
+    gcs_sys.addConstraintP2PCoincident(c2->get_gcs_circle().center, ci->get_gcs_circle().center, 1);
+    if(!solve()) return false;
+    
+    gcs_sys.addConstraintEqualRadius(c1->get_gcs_circle(), ci->get_gcs_circle(), 1);
+    if(!solve()) return false;
+
+    //- add edges to constrain relative size of mirror circle and c2 (smaller circle)
+    int pa_id = add_point(c2_x + c2_rad, c2_y);
+    SaPoint* pa = (SaPoint*)get_shape(pa_id);
+    gcs_sys.addConstraintPointOnCircle(pa->get_gcs_point(), c2->get_gcs_circle(), 1);
+    if(!solve()) return false;
+    
+    //- constrain pa to be horizontally aligned with c2 centroid
+    gcs_sys.addConstraintHorizontal(c2->get_gcs_circle().center, pa->get_gcs_point(), 1);
+    if(!solve()) return false;
+
+    //- create distance point coincident to mirror circle ci
+    double pbx = std::min(c2_rad, c1_rad);
+    double pby = std::sqrt(c1_rad * c1_rad - pbx * pbx);
+    int pb_id = add_point(pbx + c2_x, pby + c2_y);
+    SaPoint* pb = (SaPoint*)get_shape(pb_id);
+    
+    gcs_sys.addConstraintPointOnCircle(pb->get_gcs_point(), ci->get_gcs_circle(), 1);
+    if(!solve()) return false;
+
+    //- constrain distance point and pa to be vertically aligned
+    gcs_sys.addConstraintVertical(pa->get_gcs_point(), pb->get_gcs_point(), 1);
+    if(!solve()) return false;
+
+    return true;
+
+}
 
 bool GCSWrapper::circle_max_diameter(int id, double diameter)
 {
@@ -3066,6 +3116,15 @@ bool GCSWrapper::end_point_concentric(int line_id, int endPt, int circ_id)
 
     return true;
     
+}
+
+bool GCSWrapper::concentric(int idA, int idB)
+{
+    SaCircle* c1 = (SaCircle*)get_shape(idA);
+    SaCircle* c2 = (SaCircle*)get_shape(idB);
+    gcs_sys.addConstraintP2PCoincident(c1->get_gcs_circle().center, c2->get_gcs_circle().center, 1);
+    if(!solve()) return false;
+    return true;
 }
 
 bool GCSWrapper::create_brace_for_line(int line_id, int& c_id)	{

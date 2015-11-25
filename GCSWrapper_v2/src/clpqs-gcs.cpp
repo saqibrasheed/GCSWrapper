@@ -278,6 +278,27 @@ PREDICATE(make_tpp,2)
    
 }
 
+PREDICATE(make_ntpp,2)
+{
+    //- make_ec(IdA+, IdB+)
+   	return _gcs_wrap->ntpp((int)A1, (int)A2);
+    
+}
+
+PREDICATE(make_concentric,2)
+{
+    //- make_concentric(IdA+, IdB+)
+   	return _gcs_wrap->concentric((int)A1, (int)A2);
+    
+}
+
+PREDICATE(make_larger,2)
+{
+    //- make_largeric(IdA+, IdB+)
+   	return _gcs_wrap->larger((int)A1, (int)A2);
+    
+}
+
 
 
 

@@ -3,10 +3,18 @@
 :- [clpqs].
 :- [clpqs_gcs].
 
-:- dynamic object_id/2.
+:- dynamic object_id/3.
 :- dynamic line_brace_object/2.
 
 
+
+
+%%% %%%
+
+clear_scene :-
+  clpqs_gcs:reset,
+  retractall(object_id(_,_,_)),
+  retractall(line_brace_object(_,_)).
 
 %%% Create Objects %%%%
 
@@ -23,19 +31,19 @@ is_object(line(_)).
 is_object(circle(Id), Id).
 is_object(line(Id), Id).
 
-  
+object_id(Name, Id) :- object_id(Name, Id, _).
 
 
 create_object(circle(Name)) :-
   %circle(NewId, point(5,5), 7.07107),  %% for testing
   circle(NewId),
-  assert(object_id(Name, NewId)).
+  assert(object_id(Name, NewId, type(circle))).
 
 
 create_object(line(Name)) :-
   %line(NewId, point(0,0), point(10,10)),  %% for testing
   line(NewId),
-  assert(object_id(Name, NewId)).
+  assert(object_id(Name, NewId, type(line))).
 
 
 
@@ -57,6 +65,8 @@ is_constraint(max_length(_,_)).
 is_constraint(coincident(_,_)).
 is_constraint(vertical(_)).
 is_constraint(pp(_,_)).
+is_constraint(concentric(_,_)).
+is_constraint(larger(_,_)).
 
 create_constraint(min_radius(Obj, Val)) :-
   object_id(Obj, id(ObjId)),
@@ -86,7 +96,24 @@ create_constraint(vertical(Obj)) :-
 create_constraint(pp(ObjA,ObjB)) :-
   object_id(ObjA, id(IdA)),
   object_id(ObjB, id(IdB)),
-  clpqs_gcs:make_tpp(IdA, IdB).
+  clpqs_gcs:make_ntpp(IdA, IdB).
+
+create_constraint(larger(ObjA,ObjB)) :-
+  object_id(ObjA, id(IdA), type(circle)),
+  object_id(ObjB, id(IdB), type(circle)),
+  clpqs_gcs:make_larger(IdA, IdB).
+
+create_constraint(larger(length(ObjA),radius(ObjB)) ) :-
+  object_id(ObjA, id(IdA), type(line)),
+  object_id(ObjB, id(IdB), type(circle)),
+  line_brace_(IdA, BrcA),
+  clpqs_gcs:make_larger(BrcA, IdB).
+
+
+create_constraint(concentric(ObjA, ObjB)) :-
+  object_id(ObjA, id(IdA)),
+  object_id(ObjB, id(IdB)),
+  clpqs_gcs:make_concentric(IdA,IdB).
 
   
 create_constraint(coincident(EndPoint, centre(ObjB))) :-
@@ -95,6 +122,7 @@ create_constraint(coincident(EndPoint, centre(ObjB))) :-
   object_id(ObjA, id(IdA)),
   object_id(ObjB, id(IdB)),
   clpqs_gcs:end_point_concentric(IdA, EPtCode, IdB).
+
 
 
 end_point_(p1(Obj), Obj, 1).
@@ -240,5 +268,105 @@ create_objects(Objs),
 diagram(Objs, filename(t1)),
 create_constraints(Objs),
 diagram(Objs, filename(t2)).
+
+
+%%%
+
+clpqs_gcs:reset,
+
+Objs = [
+ circle(spoon_head),
+ circle(spoon_well),
+ concentric(spoon_well, spoon_head),
+ pp(spoon_well, spoon_head) 
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
+
+
+%%%
+
+clear_scene,
+
+Objs = [
+ circle(c1),
+ circle(c2),
+ larger(c1,c2)
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
+
+%%%
+
+clear_scene,
+
+Objs = [
+ circle(spoon_well),
+ line(well_depth),
+ larger(length(well_depth),radius(spoon_well))
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
+
+%%%
+
+clear_scene,
+
+Objs = [
+ circle(spoon_well)
+ line(well_depth)
+ min_length(well_depth,1)
+ max_length(well_depth,50)
+ vertical(well_depth)
+ larger(length(well_depth),radius(spoon_well))
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
+
+
+%%%
+
+clear_scene,
+
+Objs = [
+ line(spoon_handle)
+ circle(spoon_head)
+ circle(spoon_well)
+ line(well_depth)
+ min_length(spoon_handle,10)
+ max_length(spoon_handle,100)
+ min_radius(spoon_head,5)
+ max_radius(spoon_head,50)
+ coincident(p1(spoon_handle),centre(spoon_head))
+ spoon_head_handle_contact_centroid
+ pp(spoon_well,spoon_head)
+ spoon_has_well
+ min_length(well_depth,1)
+ max_length(well_depth,50)
+ vertical(well_depth)
+ larger(length(well_depth),radius(spoon_well))
+ deep_well
+],
+
+create_objects(Objs),
+diagram(Objs, filename(t1)),
+create_constraints(Objs),
+diagram(Objs, filename(t2)).
+
+
+
+
 
 **/
